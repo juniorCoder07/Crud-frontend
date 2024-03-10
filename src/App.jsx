@@ -3,8 +3,11 @@ import Signup from "./components/Singup/Signup";
 import ProductList from "./components/ProductList/ProductList";
 import Signin from "./components/Signin/Signin";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-
+import { useEffect } from "react";
+import { useCookies } from "react-cookie";
+import { useNavigate } from "react-router-dom";
 function App() {
+ 
   const router = createBrowserRouter([
     {
       path: "/",
@@ -19,6 +22,8 @@ function App() {
       element: <ProductList />,
     },
   ]);
+
+
   return (
     <>
       <RouterProvider router={router} />

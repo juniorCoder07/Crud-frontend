@@ -1,12 +1,13 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 
-import { useCookies } from 'react-cookie'
+import { useCookies } from "react-cookie";
+import Loader from "../Loader/Loader";
 const signInSchema = yup.object({
   email: yup
     .string()
@@ -25,7 +26,9 @@ const signInSchema = yup.object({
 });
 
 const Signin = () => {
-  const [cookies, setCookie] = useCookies(['access_token'])
+  const [cookies, setCookie] = useCookies(["access_token"]);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigateTo = useNavigate();
   const {
     handleSubmit,
     reset,
@@ -43,6 +46,7 @@ const Signin = () => {
 
   const onSubmit = async (values) => {
     try {
+      setIsLoading(true);
       const result = await axios.post(
         `${import.meta.env.VITE_SERVER_URL}/signin`,
         {
@@ -53,18 +57,23 @@ const Signin = () => {
 
       if (result.status === 200) {
         toast.success("Successfully Login");
-        setCookie('access_token', result.data.token, { path: '/'})
+        setCookie("access_token", result.data.token, { path: "/" });
+        navigateTo("/product-list");
         reset();
       } else {
         toast.error("Invalid Credentials");
       }
+      setIsLoading(false);
     } catch (error) {
+      setIsLoading(false);
+
       toast.error("Invalid Credentials");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {isLoading && <Loader />}
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

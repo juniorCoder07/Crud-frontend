@@ -1,10 +1,11 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
-import React from "react";
+import React, { useState } from "react";
 import { useCookies } from "react-cookie";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as yup from "yup";
+import Loader from "../Loader/Loader";
 const productSchema = yup.object({
   name: yup.string().required("Product Name is Required"),
   price: yup.number().required("Product Price is Required"),
@@ -15,8 +16,10 @@ const AddProductModel = ({
   editProduct,
   products,
   setProducts,
+  setEditProduct,
 }) => {
   const [cookies] = useCookies(["access_tokken"]);
+  const [isLoading, setIsLoading] = useState(false);
   const {
     handleSubmit,
     reset,
@@ -36,6 +39,7 @@ const AddProductModel = ({
   const onSubmit = async (values) => {
     try {
       if (editProduct) {
+        setIsLoading(true);
         const result = await axios.put(
           `${import.meta.env.VITE_SERVER_URL}/editproduct`,
           {
@@ -60,11 +64,13 @@ const AddProductModel = ({
               ? { ...product, ...result.data.product }
               : product
           );
-          console.log(updatedProducts, "update");
+
           setProducts(updatedProducts);
           setShowAddProductModal(false);
         }
+        setIsLoading(false);
       } else {
+        setIsLoading(true);
         const result = await axios.post(
           `${import.meta.env.VITE_SERVER_URL}/addproduct`,
           {
@@ -80,22 +86,29 @@ const AddProductModel = ({
             },
           }
         );
+
         if (result.status === 200) {
+          const updatedProducts = [...products, result.data.data];
+          setProducts(updatedProducts);
           toast.success(result.data.message);
           setShowAddProductModal(false);
         }
       }
+      setIsLoading(false);
     } catch (error) {
-      console.log(error);
+      setIsLoading(false);
       toast.error("Server Error");
-      console.log(error);
     }
   };
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-10">
-      <div className="bg-white p-8 rounded-lg w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Add Product</h2>
+      {isLoading && <Loader />}
+      <div className="bg-white p-8 rounded-lg w-full max-w-md m-4">
+        <h2 className="text-xl font-semibold mb-4">
+          {" "}
+          {editProduct ? "Edit Product" : "Add Product"}
+        </h2>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -141,13 +154,15 @@ const AddProductModel = ({
           </div>
           <div className="flex justify-end">
             <button
-              onClick={() => setShowAddProductModal(false)}
+              onClick={() => {
+                setShowAddProductModal(false), setEditProduct("");
+              }}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none focus:bg-gray-600 mr-2"
             >
               Cancel
             </button>
             <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-600">
-              Add
+              {editProduct ? "Edit" : "Add"}
             </button>
           </div>
         </form>

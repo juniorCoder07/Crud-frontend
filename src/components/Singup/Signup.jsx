@@ -1,10 +1,11 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Loader from "../Loader/Loader";
 
 const signUpSchema = yup.object({
   name: yup.string().required("Name is Required"),
@@ -25,6 +26,8 @@ const signUpSchema = yup.object({
 });
 
 const Signup = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigateTo = useNavigate();
 
   const {
     handleSubmit,
@@ -43,21 +46,30 @@ const Signup = () => {
   });
 
   const onSubmit = async (values) => {
-    const result = await axios.post(`${import.meta.env.VITE_SERVER_URL}/signup`, {
-      name: values.name,
-      email: values.email.toLowerCase(),
-      password: values.password,
-    });
+    setIsLoading(true);
+    const result = await axios.post(
+      `${import.meta.env.VITE_SERVER_URL}/signup`,
+      {
+        name: values.name,
+        email: values.email.toLowerCase(),
+        password: values.password,
+      }
+    );
     if (result.status === 200) {
       toast.success(result.data.message);
-      reset()
+      reset();
+      setIsLoading(false);
+      navigateTo("/");
     } else {
+      setIsLoading(false);
+
       toast.error(result.data.message);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {isLoading && <Loader />}
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
